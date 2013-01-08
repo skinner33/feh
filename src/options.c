@@ -397,7 +397,7 @@ static void feh_parse_option_array(int argc, char **argv, int finalrun)
 		{"info"          , 1, 0, 234},
 		{"force-aliasing", 0, 0, 235},
 		{"no-fehbg"      , 0, 0, 236},
-
+		{"filelist-reload", 1, 0, 237},
 		{0, 0, 0, 0}
 	};
 	int optch = 0, cmdx = 0;
@@ -722,6 +722,10 @@ static void feh_parse_option_array(int argc, char **argv, int finalrun)
 		case 236:
 			opt.no_fehbg = 1;
 			break;
+		case 237:
+			opt.filelist_reload = atof(optarg);
+			break;
+
 		default:
 			break;
 		}

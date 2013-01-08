@@ -67,6 +67,8 @@ void init_slideshow_mode(void)
 				feh_add_timer(cb_slide_timer, w, opt.slideshow_delay, "SLIDE_CHANGE");
 			if (opt.reload > 0)
 				feh_add_unique_timer(cb_reload_timer, w, opt.reload);
+			if (opt.filelist_reload > 0)
+				feh_add_unique_timer(cb_reload_filelist, w, opt.filelist_reload);
 			break;
 		} else {
 			free(s);
@@ -142,6 +144,59 @@ void cb_reload_timer(void *data)
 	return;
 }
 
+void cb_reload_filelist(void *data)
+{
+	gib_list *l;
+	char *current_filename;
+
+	winwidget w = (winwidget) data;
+
+	/* save the current filename for refinding it in new list */
+	current_filename = estrdup(FEH_FILE(current_file->data)->filename);
+
+	for (l = filelist; l; l = l->next) {
+		feh_file_free(l->data);
+		l->data = NULL;
+	}
+	gib_list_free_and_data(filelist);
+	filelist = NULL;
+	filelist_len = 0;
+	current_file = NULL;
+
+	/* reload filelist */
+	filelist = gib_list_cat(filelist, feh_read_filelist(opt.filelistfile));
+
+	filelist_len = gib_list_length(filelist);
+	if (!filelist_len) {
+		eprintf("filelist is empty while trying to reload.");
+	}
+	feh_prepare_filelist();
+
+	/* find the previously current file */
+	for (l = filelist; l; l = l->next) {
+		if (strcmp(FEH_FILE(l->data)->filename, current_filename) == 0) {
+			current_file = l;
+			break;
+		}
+	}
+
+	free(current_filename);
+
+	if (!current_file)
+		current_file = filelist;
+	w->file = current_file;
+
+	/* reset window name in case of current file order,
+	 * filename, or filelist_length has changed.
+	 */
+	current_filename = slideshow_create_name(FEH_FILE(current_file->data), w);
+	winwidget_rename(w, current_filename);
+	free(current_filename);
+
+	feh_reload_image(w, 1, 0);
+	feh_add_unique_timer(cb_reload_filelist, w, opt.filelist_reload);
+	return;
+}
 void feh_reload_image(winwidget w, int resize, int force_new)
 {
 	char *title, *new_title;

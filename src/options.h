@@ -98,6 +98,7 @@ struct __fehoptions {
 	int limit_h;
 	unsigned int thumb_redraw;
 	double reload;
+	double filelist_reload;
 	int sort;
 	int debug;
 	int geom_flags;
